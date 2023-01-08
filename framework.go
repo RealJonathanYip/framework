@@ -24,13 +24,14 @@ const (
 func init() {
 	tryCount := 1000
 	for i := 0; i < tryCount; i++ {
-		port := START_PORT + i
+		port = START_PORT + uint16(i)
 		listenerTemp, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 		if err != nil {
 			continue
 		}
 
 		listener = listenerTemp
+		log.Infof(context.TODO(), "server listen at:%s", port)
 		return
 	}
 
