@@ -35,7 +35,7 @@ func init() {
 		}
 
 		listener = listenerTemp
-		log.Infof(context.TODO(), "server listen at:%s", port)
+		log.Infof(context.TODO(), "server listen at:%d", port)
 		return
 	}
 
