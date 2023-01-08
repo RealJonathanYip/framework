@@ -22,6 +22,10 @@ const (
 )
 
 func init() {
+	server = grpc.NewServer(grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+		interceptor.WithServerTraceInterceptor(),
+	)))
+
 	tryCount := 1000
 	for i := 0; i < tryCount; i++ {
 		port = START_PORT + uint16(i)
@@ -36,10 +40,6 @@ func init() {
 	}
 
 	log.Panic(context.TODO(), "start listener fail!")
-
-	server = grpc.NewServer(grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-		interceptor.WithServerTraceInterceptor(),
-	)))
 }
 
 func GetGrpcServer() *grpc.Server {
