@@ -15,9 +15,9 @@ type LogOutput struct {
 }
 
 type Config struct {
-	XMLName   xml.Name    `xml:"server"`
-	LogLevel  string      `xml:"log_level"`
-	LogOutput []LogOutput `xml:"log_output"`
+	XMLName   xml.Name  `xml:"server"`
+	LogLevel  string    `xml:"log_level"`
+	LogOutput LogOutput `xml:"log_output"`
 }
 
 var FrameWorkConfig Config
