@@ -3,8 +3,8 @@ package interceptor
 import (
 	"context"
 	"fmt"
+	"github.com/RealJonathanYip/framework"
 	"github.com/RealJonathanYip/framework/log"
-	"github.com/RealJonathanYip/framework/rpc_context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 	"net"
@@ -26,14 +26,14 @@ func init() {
 // TODO：log and ip trace
 func WithServerTraceInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		ctx = rpc_context.NewContext(ctx)
+		ctx = framework.NewContext(ctx)
 
-		upstreamService, exist := rpc_context.Get(ctx, rpc_context.ContextKeyUpstreamService)
+		upstreamService, exist := framework.Get(ctx, framework.ContextKeyUpstreamService)
 		if !exist {
 			upstreamService = "unknow"
 		}
 
-		upstreamMethod, exist := rpc_context.Get(ctx, rpc_context.ContextKeyUpstreamMethod)
+		upstreamMethod, exist := framework.Get(ctx, framework.ContextKeyUpstreamMethod)
 		if !exist {
 			upstreamMethod = "unknow"
 		}
@@ -45,8 +45,8 @@ func WithServerTraceInterceptor() grpc.UnaryServerInterceptor {
 			method = methodInfos[2]
 			service = fmt.Sprintf("<grpc>-<%s>", methodInfos[1])
 		}
-		rpc_context.Set(ctx, rpc_context.ContextKeyCurrentMethod, method)
-		rpc_context.Set(ctx, rpc_context.ContextKeyCurrentService, service)
+		framework.Set(ctx, framework.ContextKeyCurrentMethod, method)
+		framework.Set(ctx, framework.ContextKeyCurrentService, service)
 
 		var upstreamAddress string
 		if peer, ok := peer.FromContext(ctx); ok {
@@ -56,7 +56,7 @@ func WithServerTraceInterceptor() grpc.UnaryServerInterceptor {
 				upstreamAddress = peer.Addr.String()
 			}
 		}
-		rpc_context.Set(ctx, rpc_context.ContextKeyUpstreamAddress, upstreamAddress)
+		framework.Set(ctx, framework.ContextKeyUpstreamAddress, upstreamAddress)
 
 		now := time.Now()
 		resp, err := handler(ctx, req)
@@ -79,31 +79,31 @@ func WithClientUnaryInterceptor() grpc.DialOption {
 		invoker grpc.UnaryInvoker,
 		opts ...grpc.CallOption,
 	) error {
-		ctx = rpc_context.Copy(ctx)
+		ctx = framework.Copy(ctx)
 
-		upstreamService, exist := rpc_context.Get(ctx, rpc_context.ContextKeyUpstreamService)
+		upstreamService, exist := framework.Get(ctx, framework.ContextKeyUpstreamService)
 		if !exist {
 			upstreamService = "unknow"
 		}
-		upstreamMethod, exist := rpc_context.Get(ctx, rpc_context.ContextKeyUpstreamMethod)
+		upstreamMethod, exist := framework.Get(ctx, framework.ContextKeyUpstreamMethod)
 		if !exist {
 			upstreamMethod = "unknow"
 		}
 
-		currentMethod, exist := rpc_context.Get(ctx, rpc_context.ContextKeyCurrentMethod)
+		currentMethod, exist := framework.Get(ctx, framework.ContextKeyCurrentMethod)
 		if !exist {
 			pc := make([]uintptr, 1)
 			runtime.Callers(4, pc)
 			function := runtime.FuncForPC(pc[0])
 			currentMethod = fmt.Sprintf("<local>-<%s>", function.Name())
 		}
-		rpc_context.Set(ctx, rpc_context.ContextKeyUpstreamMethod, currentMethod)
+		framework.Set(ctx, framework.ContextKeyUpstreamMethod, currentMethod)
 
-		currentService, exist := rpc_context.Get(ctx, rpc_context.ContextKeyCurrentService)
+		currentService, exist := framework.Get(ctx, framework.ContextKeyCurrentService)
 		if !exist {
 			currentService = processName
 		}
-		rpc_context.Set(ctx, rpc_context.ContextKeyUpstreamService, currentService)
+		framework.Set(ctx, framework.ContextKeyUpstreamService, currentService)
 
 		methodInfos := strings.Split(method, "/")
 		downstreamMethod := method
@@ -113,10 +113,10 @@ func WithClientUnaryInterceptor() grpc.DialOption {
 			downstreamService = methodInfos[1]
 		}
 
-		rpc_context.Del(ctx, rpc_context.ContextKeyUpstreamAddress)
+		framework.Del(ctx, framework.ContextKeyUpstreamAddress)
 
 		now := time.Now()
-		err := invoker(rpc_context.NewRpcContext(ctx), method, req, resp, cc, opts...)
+		err := invoker(framework.NewRpcContext(ctx), method, req, resp, cc, opts...)
 		cost := time.Since(now).Milliseconds()
 
 		log.Infof(ctx, "【request】upstreamService:%v upstreamMethod:%v downstreamService:%v downstreamMethod:%v currentService:%v currentMethod:%v cost:%v(ms) req:%+v, resp:%+v \n",
