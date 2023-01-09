@@ -3,7 +3,7 @@ package interceptor
 import (
 	"context"
 	"fmt"
-	"github.com/RealJonathanYip/framework"
+	context2 "github.com/RealJonathanYip/framework/context"
 	"github.com/RealJonathanYip/framework/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
@@ -26,14 +26,14 @@ func init() {
 // TODO：log and ip trace
 func WithServerTraceInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		ctx = framework.NewContext(ctx)
+		ctx = context2.NewContext(ctx)
 
-		upstreamService, exist := framework.Get(ctx, framework.ContextKeyUpstreamService)
+		upstreamService, exist := context2.Get(ctx, context2.ContextKeyUpstreamService)
 		if !exist {
 			upstreamService = "unknow"
 		}
 
-		upstreamMethod, exist := framework.Get(ctx, framework.ContextKeyUpstreamMethod)
+		upstreamMethod, exist := context2.Get(ctx, context2.ContextKeyUpstreamMethod)
 		if !exist {
 			upstreamMethod = "unknow"
 		}
@@ -45,8 +45,8 @@ func WithServerTraceInterceptor() grpc.UnaryServerInterceptor {
 			method = methodInfos[2]
 			service = fmt.Sprintf("<grpc>-<%s>", methodInfos[1])
 		}
-		framework.Set(ctx, framework.ContextKeyCurrentMethod, method)
-		framework.Set(ctx, framework.ContextKeyCurrentService, service)
+		context2.Set(ctx, context2.ContextKeyCurrentMethod, method)
+		context2.Set(ctx, context2.ContextKeyCurrentService, service)
 
 		var upstreamAddress string
 		if peer, ok := peer.FromContext(ctx); ok {
@@ -56,7 +56,7 @@ func WithServerTraceInterceptor() grpc.UnaryServerInterceptor {
 				upstreamAddress = peer.Addr.String()
 			}
 		}
-		framework.Set(ctx, framework.ContextKeyUpstreamAddress, upstreamAddress)
+		context2.Set(ctx, context2.ContextKeyUpstreamAddress, upstreamAddress)
 
 		now := time.Now()
 		resp, err := handler(ctx, req)
@@ -79,31 +79,31 @@ func WithClientUnaryInterceptor() grpc.DialOption {
 		invoker grpc.UnaryInvoker,
 		opts ...grpc.CallOption,
 	) error {
-		ctx = framework.Copy(ctx)
+		ctx = context2.Copy(ctx)
 
-		upstreamService, exist := framework.Get(ctx, framework.ContextKeyUpstreamService)
+		upstreamService, exist := context2.Get(ctx, context2.ContextKeyUpstreamService)
 		if !exist {
 			upstreamService = "unknow"
 		}
-		upstreamMethod, exist := framework.Get(ctx, framework.ContextKeyUpstreamMethod)
+		upstreamMethod, exist := context2.Get(ctx, context2.ContextKeyUpstreamMethod)
 		if !exist {
 			upstreamMethod = "unknow"
 		}
 
-		currentMethod, exist := framework.Get(ctx, framework.ContextKeyCurrentMethod)
+		currentMethod, exist := context2.Get(ctx, context2.ContextKeyCurrentMethod)
 		if !exist {
 			pc := make([]uintptr, 1)
 			runtime.Callers(4, pc)
 			function := runtime.FuncForPC(pc[0])
 			currentMethod = fmt.Sprintf("<local>-<%s>", function.Name())
 		}
-		framework.Set(ctx, framework.ContextKeyUpstreamMethod, currentMethod)
+		context2.Set(ctx, context2.ContextKeyUpstreamMethod, currentMethod)
 
-		currentService, exist := framework.Get(ctx, framework.ContextKeyCurrentService)
+		currentService, exist := context2.Get(ctx, context2.ContextKeyCurrentService)
 		if !exist {
 			currentService = processName
 		}
-		framework.Set(ctx, framework.ContextKeyUpstreamService, currentService)
+		context2.Set(ctx, context2.ContextKeyUpstreamService, currentService)
 
 		methodInfos := strings.Split(method, "/")
 		downstreamMethod := method
@@ -113,10 +113,10 @@ func WithClientUnaryInterceptor() grpc.DialOption {
 			downstreamService = methodInfos[1]
 		}
 
-		framework.Del(ctx, framework.ContextKeyUpstreamAddress)
+		context2.Del(ctx, context2.ContextKeyUpstreamAddress)
 
 		now := time.Now()
-		err := invoker(framework.NewRpcContext(ctx), method, req, resp, cc, opts...)
+		err := invoker(context2.NewRpcContext(ctx), method, req, resp, cc, opts...)
 		cost := time.Since(now).Milliseconds()
 
 		log.Infof(ctx, "【request】upstreamService:%v upstreamMethod:%v downstreamService:%v downstreamMethod:%v currentService:%v currentMethod:%v cost:%v(ms) req:%+v, resp:%+v \n",

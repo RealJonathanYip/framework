@@ -3,7 +3,7 @@ package log
 import (
 	"context"
 	"fmt"
-	"github.com/RealJonathanYip/framework"
+	context2 "github.com/RealJonathanYip/framework/context"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"log"
@@ -122,7 +122,7 @@ func (l *loger) Logf(ctx context.Context, format string, v ...interface{}) {
 }
 
 func (l *loger) writelog(ctx context.Context, level, msg string, fields ...zapcore.Field) {
-	msg += framework.GetLogText(ctx)
+	msg += context2.GetLogText(ctx)
 	switch level {
 	case "info":
 		l.logger.Info(msg, fields...)
