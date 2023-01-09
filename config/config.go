@@ -26,7 +26,7 @@ func init() {
 	ctx := context0.NewContext(context.TODO())
 	dirs := []string{"./", "./conf/", "../conf/", "../../conf/"}
 	for _, dir := range dirs {
-		data, err := os.ReadFile(dir + "server.xml")
+		data, err := os.ReadFile(dir + "framework.xml")
 		if err == nil {
 			err = xml.Unmarshal(data, &FrameWorkConfig)
 			if err != nil {
