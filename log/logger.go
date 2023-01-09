@@ -45,7 +45,8 @@ func init() {
 	//初始化日志为stdout
 	procname := path.Base(os.Args[0])
 
-	InitLog(processName(procname), SetTarget("asyncfile"), LogFilePath("./logs"), LogFileRotate("date"))
+	InitLog(processName(procname))
+	//, SetTarget("asyncfile"), LogFilePath("./logs"), LogFileRotate("date")
 }
 
 // 根据options的设置,再次初始化日志系统。

@@ -3,6 +3,7 @@ package framework
 import (
 	"context"
 	"fmt"
+	"github.com/RealJonathanYip/framework/config"
 	"github.com/RealJonathanYip/framework/interceptor"
 	"github.com/RealJonathanYip/framework/log"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -22,6 +23,20 @@ const (
 )
 
 func init() {
+	log.SetLogLevel(config.FrameWorkConfig.LogLevel)
+
+	for _, output := range config.FrameWorkConfig.LogOutput {
+		log.InitLog(log.SetTarget(output.Value))
+
+		if output.Path != "" {
+			log.InitLog(log.SetTarget(output.Path))
+		}
+
+		if output.FileRotate != "" {
+			log.InitLog(log.LogFileRotate(output.FileRotate))
+		}
+	}
+
 	server = grpc.NewServer(grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 		interceptor.WithServerTraceInterceptor(),
 	)))
