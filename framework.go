@@ -29,7 +29,7 @@ func init() {
 		log.InitLog(log.SetTarget(output.Value))
 
 		if output.Path != "" {
-			log.InitLog(log.SetTarget(output.Path))
+			log.InitLog(log.LogFilePath(output.Path))
 		}
 
 		if output.FileRotate != "" {
