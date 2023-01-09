@@ -27,13 +27,16 @@ func init() {
 	dirs := []string{"./", "./conf/", "../conf/", "../../conf/"}
 	for _, dir := range dirs {
 		data, err := os.ReadFile(dir + "framework.xml")
-		if err == nil {
-			err = xml.Unmarshal(data, &FrameWorkConfig)
-			if err != nil {
-				log.LogF(ctx, "panic", "load config file: %s framework.xml %s", dir, err)
-			}
-			log.LogF(ctx, "info", "load config file %s framework.xml\n %#v", dir, FrameWorkConfig)
+		if err != nil {
+			continue
 		}
+		err = xml.Unmarshal(data, &FrameWorkConfig)
+		if err != nil {
+			log.Panicf(ctx, "load config file: %s framework.xml %s", dir, err)
+		}
+
+		log.Infof(ctx, "load config file %s framework.xml\n %#v", dir, FrameWorkConfig)
+		return
 	}
 
 	log.Panic(ctx, "framework config not find")
