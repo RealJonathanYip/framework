@@ -1,6 +1,6 @@
-package context
+package context0
 
-//context interface for business layer
+//context0 interface for business layer
 
 import (
 	"context"
