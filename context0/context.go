@@ -74,7 +74,11 @@ func Del(ctx context.Context, keys ...string) {
 	}
 }
 
-func NewContext(ctx context.Context) context.Context {
+func NewContext() context.Context {
+	return context.WithValue(context.TODO(), contextMeta, &metaDataInner{metaData: metadata.Pairs(ContextKeyTraceID, uuid.New().String())})
+}
+
+func FromRpcContext(ctx context.Context) context.Context {
 	meta, exit := metadata.FromIncomingContext(ctx)
 	if !exit {
 		return context.WithValue(ctx, contextMeta, &metaDataInner{metaData: metadata.Pairs(ContextKeyTraceID, uuid.New().String())})
@@ -94,7 +98,7 @@ func Copy(from context.Context) context.Context {
 	return context.WithValue(from, contextMeta, &metaDataInner{metaData: meta.metaData.Copy()})
 }
 
-func NewRpcContext(ctx context.Context) context.Context {
+func Prepare(ctx context.Context) context.Context {
 	meta := ctx.Value(contextMeta).(*metaDataInner)
 	if meta == nil {
 		return metadata.NewOutgoingContext(ctx, metadata.Pairs(ContextKeyTraceID, uuid.New().String()))

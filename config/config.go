@@ -1,7 +1,6 @@
 package config
 
 import (
-	"context"
 	"encoding/xml"
 	"github.com/RealJonathanYip/framework/context0"
 	"github.com/RealJonathanYip/framework/log"
@@ -23,7 +22,7 @@ type Config struct {
 var FrameWorkConfig Config
 
 func init() {
-	ctx := context0.NewContext(context.TODO())
+	ctx := context0.NewContext()
 	dirs := []string{"./", "./conf/", "../conf/", "../../conf/"}
 	for _, dir := range dirs {
 		data, err := os.ReadFile(dir + "framework.xml")

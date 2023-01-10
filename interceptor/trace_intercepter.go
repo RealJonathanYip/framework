@@ -26,7 +26,7 @@ func init() {
 // TODO：log and ip trace
 func WithServerTraceInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		ctx = context2.NewContext(ctx)
+		ctx = context2.FromRpcContext(ctx)
 
 		upstreamService, exist := context2.Get(ctx, context2.ContextKeyUpstreamService)
 		if !exist {
@@ -116,7 +116,7 @@ func WithClientUnaryInterceptor() grpc.DialOption {
 		context2.Del(ctx, context2.ContextKeyUpstreamAddress)
 
 		now := time.Now()
-		err := invoker(context2.NewRpcContext(ctx), method, req, resp, cc, opts...)
+		err := invoker(context2.Prepare(ctx), method, req, resp, cc, opts...)
 		cost := time.Since(now).Milliseconds()
 
 		log.Infof(ctx, "【request】upstreamService:%v upstreamMethod:%v downstreamService:%v downstreamMethod:%v currentService:%v currentMethod:%v cost:%v(ms) req:%+v, resp:%+v \n",
