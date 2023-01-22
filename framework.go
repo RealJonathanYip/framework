@@ -23,10 +23,10 @@ const (
 )
 
 func init() {
-	log.SetLogLevel(config.FrameWorkConfig.LogLevel)
 
 	output := config.FrameWorkConfig.LogOutput
 	log.InitLog(log.SetTarget(output.Value), log.LogFilePath(output.Path), log.LogFileRotate(output.FileRotate))
+	log.SetLogLevel(config.FrameWorkConfig.LogLevel)
 
 	server = grpc.NewServer(grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 		interceptor.WithServerTraceInterceptor(),
