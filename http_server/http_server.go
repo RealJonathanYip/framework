@@ -3,10 +3,10 @@ package http_server
 import (
 	"context"
 	"fmt"
-	"github.com/RealJonathanYip/framework"
 	"github.com/RealJonathanYip/framework/context0"
 	"github.com/RealJonathanYip/framework/log"
 	"github.com/RealJonathanYip/framework/overflow"
+	"github.com/RealJonathanYip/framework/utils"
 	"github.com/pkg/errors"
 	"net"
 	"net/http"
@@ -53,7 +53,7 @@ func (h *HttpServer) onReq(rsp http.ResponseWriter, req *http.Request) {
 		return
 	}
 	ctx := context0.NewContext()
-	defer framework.Recover(ctx)
+	defer utils.Recover(ctx)
 
 	szEntryPoint := path + "_" + method
 	context0.Set(ctx, context0.ContextKeyCurrentService, h.name, context0.ContextKeyCurrentMethod, szEntryPoint)
