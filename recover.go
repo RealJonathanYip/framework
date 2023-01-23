@@ -1,4 +1,4 @@
-package recover
+package framework
 
 import (
 	"bytes"
@@ -67,14 +67,7 @@ func function(pc uintptr) []byte {
 		return dunno
 	}
 	name := []byte(fn.Name())
-	// The name includes the path name to the package, which is unnecessary
-	// since the file name is already included.  Plus, it has center dots.
-	// That is, we see
-	//	runtime/debug.*T·ptrmethod
-	// and want
-	//	*T.ptrmethod
-	// Also the package path might contains dot (e.g. code.google.com/...),
-	// so first eliminate the path prefix
+
 	if lastSlash := bytes.LastIndex(name, slash); lastSlash >= 0 {
 		name = name[lastSlash+1:]
 	}

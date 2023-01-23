@@ -3,6 +3,7 @@ package http_server
 import (
 	"context"
 	"fmt"
+	"github.com/RealJonathanYip/framework"
 	"github.com/RealJonathanYip/framework/context0"
 	"github.com/RealJonathanYip/framework/log"
 	"github.com/RealJonathanYip/framework/overflow"
@@ -39,7 +40,7 @@ func New(name string) *HttpServer {
 	return &HttpServer{
 		httpRouter:      make(map[string]func(http.ResponseWriter, *http.Request)),
 		onBeforeRequest: make([]func(ptrRsp *http.ResponseWriter, ptrReq *http.Request) bool, 0),
-		name:            name,
+		name:            "web." + name,
 	}
 }
 
@@ -51,10 +52,11 @@ func (h *HttpServer) onReq(rsp http.ResponseWriter, req *http.Request) {
 		rsp.WriteHeader(200)
 		return
 	}
+	ctx := context0.NewContext()
+	defer framework.Recover(ctx)
 
 	szEntryPoint := path + "_" + method
 
-	ctx := context0.NewContext()
 	if fnHandler, bExist := h.httpRouter[szEntryPoint]; !bExist {
 		log.Warningf(ctx, "not found http -> %v", path+"_"+method)
 		http.NotFound(rsp, req)
@@ -142,6 +144,9 @@ func (h *HttpServer) Run() error {
 
 		mux := http.NewServeMux()
 		mux.HandleFunc("/", h.onReq)
+
+		//TODO: add service discover logic
+
 		err = http.Serve(h.listener, mux)
 		if err != nil {
 			log.Warningf(context.TODO(), "start http server:%s fail!:%v", h.name, err)
