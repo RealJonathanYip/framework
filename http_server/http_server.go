@@ -56,6 +56,7 @@ func (h *HttpServer) onReq(rsp http.ResponseWriter, req *http.Request) {
 	defer framework.Recover(ctx)
 
 	szEntryPoint := path + "_" + method
+	context0.Set(ctx, context0.ContextKeyCurrentService, h.name, context0.ContextKeyCurrentMethod, szEntryPoint)
 
 	if fnHandler, bExist := h.httpRouter[szEntryPoint]; !bExist {
 		log.Warningf(ctx, "not found http -> %v", path+"_"+method)
