@@ -30,7 +30,7 @@ const (
 )
 
 // 公用的返回
-type Response struct {
+type Reply struct {
 	Result uint32      `json:"result"`
 	Msg    string      `json:"msg"`
 	Data   interface{} `json:"data"`
