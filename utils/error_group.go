@@ -124,3 +124,7 @@ func (g *Group) SetLimit(n int) {
 	}
 	g.sem = make(chan token, n)
 }
+
+func (g *Group) HasError() bool {
+	return g.err != nil
+}
