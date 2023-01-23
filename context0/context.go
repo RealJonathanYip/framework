@@ -14,9 +14,9 @@ const (
 	ContextKeyTraceID         = "persist_trace_id"
 	ContextKeyUpstreamService = "temp_upstream_service"
 	ContextKeyUpstreamMethod  = "temp_upstream_method"
+	ContextKeyUpstreamAddress = "temp_upstream_address"
 	ContextKeyCurrentMethod   = "temp_current_method"
 	ContextKeyCurrentService  = "temp_current_service"
-	ContextKeyUpstreamAddress = "temp_upstream_address"
 	contextMeta               = "meta_data"
 )
 
