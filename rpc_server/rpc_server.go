@@ -29,7 +29,6 @@ func New(name string) *RpcServer {
 
 func (r *RpcServer) Serve() {
 	//TODO: add service discover logic...
-
 	startPort, tryCount := 8888, 1000
 	for i := 0; i < tryCount; i++ {
 		port := startPort + i
