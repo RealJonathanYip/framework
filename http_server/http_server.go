@@ -95,7 +95,7 @@ func (h *HttpServer) doRegisterHttpHandler(path, method string, handler, overFlo
 		}
 
 		for _, fnHandler := range h.onBeforeRequest {
-			if exit := fnHandler(ctx, resp, req); exit {
+			if interrupt := fnHandler(ctx, resp, req); interrupt {
 				return
 			}
 		}
