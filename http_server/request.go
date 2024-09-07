@@ -1,9 +1,7 @@
 package http_server
 
 import (
-	"context"
-	"encoding/json"
-	"github.com/RealJonathanYip/framework/log"
+	"github.com/bytedance/go-tagexpr/v2/binding"
 	"net/http"
 	"net/url"
 )
@@ -20,7 +18,38 @@ type FormGetter struct {
 	form url.Values
 }
 
-func NewQueryGetter(req *http.Request) *QueryGetter {
+type Request struct {
+	http.Request
+}
+
+func (r *Request) ParamsFromQuery(params *struct{}) error {
+	err := binding.BindAndValidate(&params, r, newQueryGetter(&r.Request))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Request) ParamsFromHeader(params *struct{}) error {
+	err := binding.BindAndValidate(&params, r, newHeaderGetter(&r.Request))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Request) ParamsFromForm(params *struct{}) error {
+	err := binding.BindAndValidate(&params, r, newFormGetter(&r.Request))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func newQueryGetter(req *http.Request) *QueryGetter {
 	return &QueryGetter{
 		query: req.URL.Query(),
 	}
@@ -34,7 +63,7 @@ func (q *QueryGetter) Get(name string) (string, bool) {
 	return q.query.Get(name), true
 }
 
-func NewHeaderGetter(req *http.Request) *HeaderGetter {
+func newHeaderGetter(req *http.Request) *HeaderGetter {
 	return &HeaderGetter{
 		header: req.Header,
 	}
@@ -49,7 +78,7 @@ func (q *HeaderGetter) Get(name string) (string, bool) {
 	return values[0], true
 }
 
-func NewFormGetter(req *http.Request) *FormGetter {
+func newFormGetter(req *http.Request) *FormGetter {
 	_ = req.ParseForm()
 	return &FormGetter{
 		form: req.PostForm,
@@ -62,26 +91,4 @@ func (q *FormGetter) Get(name string) (string, bool) {
 	}
 
 	return q.form.Get(name), true
-}
-
-func ReplyAny(ctx context.Context, resp *http.ResponseWriter, data interface{}) error {
-	byteData, ok := data.([]byte)
-	if !ok {
-		byteDataTemp, err := json.Marshal(data)
-		if err != nil {
-			log.Warningf(ctx, "json marshal result err!:%v", err)
-			return err
-		}
-
-		byteData = byteDataTemp
-	}
-
-	(*resp).Header().Set("content-type", "application/json;utf-8")
-
-	if _, err := (*resp).Write(byteData); err != nil {
-		log.Warningf(ctx, "http reply err!:%v", err)
-		return err
-	}
-
-	return nil
 }
