@@ -29,6 +29,6 @@ func ReadXml(ctx context.Context, file string, output interface{}, panicOnFail .
 		return err
 	}
 
-	log.Infof(ctx, "load config file %s \n %#v", file, output)
+	log.Infof(ctx, "load config file %s %+v", file, output)
 	return nil
 }
