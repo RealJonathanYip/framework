@@ -6,24 +6,24 @@ import (
 	"net/url"
 )
 
-type QueryGetter struct {
+type queryGetter struct {
 	query url.Values
 }
 
-type HeaderGetter struct {
+type headerGetter struct {
 	header http.Header
 }
 
-type FormGetter struct {
+type formGetter struct {
 	form url.Values
 }
 
 type Request struct {
-	http.Request
+	*http.Request
 }
 
 func (r *Request) ParamsFromQuery(params *struct{}) error {
-	err := binding.BindAndValidate(&params, r, newQueryGetter(&r.Request))
+	err := binding.BindAndValidate(&params, r.Request, newQueryGetter(r.Request))
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (r *Request) ParamsFromQuery(params *struct{}) error {
 }
 
 func (r *Request) ParamsFromHeader(params *struct{}) error {
-	err := binding.BindAndValidate(&params, r, newHeaderGetter(&r.Request))
+	err := binding.BindAndValidate(&params, r.Request, newHeaderGetter(r.Request))
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (r *Request) ParamsFromHeader(params *struct{}) error {
 }
 
 func (r *Request) ParamsFromForm(params *struct{}) error {
-	err := binding.BindAndValidate(&params, r, newFormGetter(&r.Request))
+	err := binding.BindAndValidate(&params, r.Request, newFormGetter(r.Request))
 	if err != nil {
 		return err
 	}
@@ -49,13 +49,13 @@ func (r *Request) ParamsFromForm(params *struct{}) error {
 	return nil
 }
 
-func newQueryGetter(req *http.Request) *QueryGetter {
-	return &QueryGetter{
+func newQueryGetter(req *http.Request) *queryGetter {
+	return &queryGetter{
 		query: req.URL.Query(),
 	}
 }
 
-func (q *QueryGetter) Get(name string) (string, bool) {
+func (q *queryGetter) Get(name string) (string, bool) {
 	if !q.query.Has(name) {
 		return "", false
 	}
@@ -63,13 +63,13 @@ func (q *QueryGetter) Get(name string) (string, bool) {
 	return q.query.Get(name), true
 }
 
-func newHeaderGetter(req *http.Request) *HeaderGetter {
-	return &HeaderGetter{
+func newHeaderGetter(req *http.Request) *headerGetter {
+	return &headerGetter{
 		header: req.Header,
 	}
 }
 
-func (q *HeaderGetter) Get(name string) (string, bool) {
+func (q *headerGetter) Get(name string) (string, bool) {
 	values := q.header.Values(name)
 	if len(values) == 0 {
 		return "", false
@@ -78,14 +78,14 @@ func (q *HeaderGetter) Get(name string) (string, bool) {
 	return values[0], true
 }
 
-func newFormGetter(req *http.Request) *FormGetter {
+func newFormGetter(req *http.Request) *formGetter {
 	_ = req.ParseForm()
-	return &FormGetter{
+	return &formGetter{
 		form: req.PostForm,
 	}
 }
 
-func (q *FormGetter) Get(name string) (string, bool) {
+func (q *formGetter) Get(name string) (string, bool) {
 	if !q.form.Has(name) {
 		return "", false
 	}

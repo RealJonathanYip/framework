@@ -7,12 +7,12 @@ import (
 	"net/http"
 )
 
-type Resopnse struct {
+type Response struct {
 	http.ResponseWriter
-	onBeforeReply func(context.Context, *Resopnse)
+	onBeforeReply func(context.Context, *Response)
 }
 
-func (r *Resopnse) replyJson(ctx context.Context, data interface{}) error {
+func (r *Response) replyJson(ctx context.Context, data interface{}) error {
 	byteData, ok := data.([]byte)
 	if !ok {
 		byteDataTemp, err := json.Marshal(data)

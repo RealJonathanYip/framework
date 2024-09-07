@@ -13,8 +13,9 @@ import (
 )
 
 type HttpServer struct {
-	httpRouter      map[string]func(context.Context, http.ResponseWriter, *http.Request)
-	onBeforeRequest []func(context.Context, *http.ResponseWriter, *http.Request) bool
+	httpRouter      map[string]func(context.Context, *Response, *Request)
+	onBeforeRequest []func(context.Context, *Response, *Request)
+	onBeforeReply   []func(context.Context, *Response, *Request)
 	listener        net.Listener
 	port            int
 	name            string
@@ -38,8 +39,9 @@ type Reply struct {
 
 func New(name string) *HttpServer {
 	return &HttpServer{
-		httpRouter:      make(map[string]func(context.Context, http.ResponseWriter, *http.Request)),
-		onBeforeRequest: make([]func(context.Context, *http.ResponseWriter, *http.Request) bool, 0),
+		httpRouter:      make(map[string]func(context.Context, *Response, *Request)),
+		onBeforeRequest: make([]func(context.Context, *Response, *Request), 0),
+		onBeforeReply:   make([]func(context.Context, *Response, *Request), 0),
 		name:            "web." + name,
 	}
 }
@@ -63,20 +65,28 @@ func (h *HttpServer) onReq(rsp http.ResponseWriter, req *http.Request) {
 		http.NotFound(rsp, req)
 		return
 	} else {
-		fnHandler(ctx, rsp, req)
+		request := &Request{req}
+		onBeforeReply := func(ctx context.Context, response *Response) {
+			for _, handler := range h.onBeforeReply {
+				handler(ctx, response, request)
+			}
+		}
+		response := &Response{rsp, onBeforeReply}
+
+		fnHandler(ctx, response, request)
 	}
 }
 
-func (h *HttpServer) doRegisterHttpHandler(path, method string, handler, overFlowHandler func(context.Context, *http.ResponseWriter, *http.Request), maxQPS ...uint32) {
+func (h *HttpServer) doRegisterHttpHandler(path, method string, handler, overFlowHandler func(context.Context, *Response, *Request), maxQPS ...uint32) {
 	qps := uint32(10240)
 	if len(maxQPS) > 0 {
 		qps = maxQPS[0]
 	}
 
-	h.httpRouter[path+"_"+method] = func(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	h.httpRouter[path+"_"+method] = func(ctx context.Context, resp *Response, req *Request) {
 		if overflow.IsOverFlow(method+"."+path, qps) {
 			if overFlowHandler != nil {
-				overFlowHandler(ctx, &resp, req)
+				overFlowHandler(ctx, resp, req)
 				return
 			}
 
@@ -85,18 +95,16 @@ func (h *HttpServer) doRegisterHttpHandler(path, method string, handler, overFlo
 		}
 
 		for _, fnHandler := range h.onBeforeRequest {
-			if !fnHandler(ctx, &resp, req) {
-				return
-			}
+			fnHandler(ctx, resp, req)
 		}
 
-		handler(ctx, &resp, req)
+		handler(ctx, resp, req)
 	}
 
 	log.Infof(context0.NewContext(), "register http router : %v", path+"_"+method)
 }
 
-func (h *HttpServer) Post(szPath string, fnHandler, fnOnOverFlow func(context.Context, *http.ResponseWriter, *http.Request), maxQPS ...uint32) {
+func (h *HttpServer) Post(szPath string, fnHandler, fnOnOverFlow func(context.Context, *Response, *Request), maxQPS ...uint32) {
 	if _, bExist := h.httpRouter[_METHOD_POST+"."+szPath]; !bExist {
 		h.doRegisterHttpHandler(szPath, _METHOD_POST, fnHandler, fnOnOverFlow, maxQPS...)
 	} else {
@@ -104,7 +112,7 @@ func (h *HttpServer) Post(szPath string, fnHandler, fnOnOverFlow func(context.Co
 	}
 }
 
-func (h *HttpServer) Put(szPath string, fnHandler, fnOnOverFlow func(context.Context, *http.ResponseWriter, *http.Request), maxQPS ...uint32) {
+func (h *HttpServer) Put(szPath string, fnHandler, fnOnOverFlow func(context.Context, *Response, *Request), maxQPS ...uint32) {
 	if _, bExist := h.httpRouter[_METHOD_PUT+"."+szPath]; !bExist {
 		h.doRegisterHttpHandler(szPath, _METHOD_PUT, fnHandler, fnOnOverFlow, maxQPS...)
 	} else {
@@ -112,7 +120,7 @@ func (h *HttpServer) Put(szPath string, fnHandler, fnOnOverFlow func(context.Con
 	}
 }
 
-func (h *HttpServer) Get(szPath string, fnHandler, fnOnOverFlow func(context.Context, *http.ResponseWriter, *http.Request), maxQPS ...uint32) {
+func (h *HttpServer) Get(szPath string, fnHandler, fnOnOverFlow func(context.Context, *Response, *Request), maxQPS ...uint32) {
 	if _, bExist := h.httpRouter[_METHOD_GET+"."+szPath]; !bExist {
 		h.doRegisterHttpHandler(szPath, _METHOD_GET, fnHandler, fnOnOverFlow, maxQPS...)
 	} else {
@@ -120,7 +128,7 @@ func (h *HttpServer) Get(szPath string, fnHandler, fnOnOverFlow func(context.Con
 	}
 }
 
-func (h *HttpServer) Delete(szPath string, fnHandler, fnOnOverFlow func(context.Context, *http.ResponseWriter, *http.Request), maxQPS ...uint32) {
+func (h *HttpServer) Delete(szPath string, fnHandler, fnOnOverFlow func(context.Context, *Response, *Request), maxQPS ...uint32) {
 	if _, bExist := h.httpRouter[_METHOD_DELETE+"."+szPath]; !bExist {
 		h.doRegisterHttpHandler(szPath, _METHOD_DELETE, fnHandler, fnOnOverFlow, maxQPS...)
 	} else {
@@ -160,6 +168,10 @@ func (h *HttpServer) Run() error {
 	return errors.Errorf("http server:%s fail too much", h.name)
 }
 
-func (h *HttpServer) BindMiddleWare(handler func(context.Context, *http.ResponseWriter, *http.Request) bool) {
+func (h *HttpServer) OnBeforeRequest(handler func(context.Context, *Response, *Request)) {
 	h.onBeforeRequest = append(h.onBeforeRequest, handler)
+}
+
+func (h *HttpServer) OnBeforeReply(handler func(context.Context, *Response, *Request)) {
+	h.onBeforeReply = append(h.onBeforeReply, handler)
 }
