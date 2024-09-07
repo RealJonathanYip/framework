@@ -12,7 +12,7 @@ type Response struct {
 	onBeforeReply func(context.Context, *Response)
 }
 
-func (r *Response) replyJson(ctx context.Context, data interface{}) error {
+func (r *Response) ReplyJson(ctx context.Context, data interface{}) error {
 	byteData, ok := data.([]byte)
 	if !ok {
 		byteDataTemp, err := json.Marshal(data)
