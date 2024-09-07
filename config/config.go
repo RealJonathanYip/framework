@@ -23,7 +23,7 @@ type Config struct {
 var FrameWorkConfig Config
 
 func init() {
-	if err := ReadXml(context0.NewContext(), "./conf/framework.xml", &FrameWorkConfig, true); err != nil {
+	if err := ReadXml(context0.NewContext(), "./conf/server.xml", &FrameWorkConfig, true); err != nil {
 		panic(err)
 	}
 }
