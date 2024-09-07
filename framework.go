@@ -1,12 +1,32 @@
 package framework
 
 import (
+	"encoding/xml"
 	"github.com/RealJonathanYip/framework/config"
+	"github.com/RealJonathanYip/framework/context0"
 	"github.com/RealJonathanYip/framework/log"
 )
 
-func init() {
-	output := config.FrameWorkConfig.LogOutput
-	log.InitLog(log.SetTarget(output.Value), log.LogFilePath(output.Path), log.LogFileRotate(output.FileRotate))
-	log.SetLogLevel(config.FrameWorkConfig.LogLevel)
+type logOutput struct {
+	Path       string `xml:"path,attr"`
+	FileRotate string `xml:"file_rotate,attr"`
+	Value      string `xml:",chardata"`
+}
+
+type localConfig struct {
+	XMLName   xml.Name  `xml:"server"`
+	LogLevel  string    `xml:"log_level"`
+	LogOutput logOutput `xml:"log_output"`
+}
+
+var frameWorkConfig localConfig
+
+func Init(configFile string) {
+	if err := config.ReadXml(context0.NewContext(), configFile, &frameWorkConfig, true); err != nil {
+		panic(err)
+	}
+
+	log.InitLog(log.SetTarget(frameWorkConfig.LogOutput.Value),
+		log.LogFilePath(frameWorkConfig.LogOutput.Path), log.LogFileRotate(frameWorkConfig.LogOutput.FileRotate))
+	log.SetLogLevel(frameWorkConfig.LogLevel)
 }

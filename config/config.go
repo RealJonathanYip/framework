@@ -3,30 +3,9 @@ package config
 import (
 	"context"
 	"encoding/xml"
-	"github.com/RealJonathanYip/framework/context0"
 	"github.com/RealJonathanYip/framework/log"
 	"os"
 )
-
-type LogOutput struct {
-	Path       string `xml:"path,attr"`
-	FileRotate string `xml:"file_rotate,attr"`
-	Value      string `xml:",chardata"`
-}
-
-type Config struct {
-	XMLName   xml.Name  `xml:"server"`
-	LogLevel  string    `xml:"log_level"`
-	LogOutput LogOutput `xml:"log_output"`
-}
-
-var FrameWorkConfig Config
-
-func init() {
-	if err := ReadXml(context0.NewContext(), "./conf/server.xml", &FrameWorkConfig, true); err != nil {
-		panic(err)
-	}
-}
 
 func ReadXml(ctx context.Context, file string, output interface{}, panicOnFail ...bool) error {
 	doPanic := false
