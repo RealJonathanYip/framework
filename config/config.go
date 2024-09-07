@@ -16,7 +16,7 @@ func ReadXml(ctx context.Context, file string, output interface{}, panicOnFail .
 	data, err := os.ReadFile(file)
 	if err != nil && doPanic {
 		log.Panicf(ctx, "load config file fail: %s:%s", file, err)
-	} else {
+	} else if err != nil {
 		log.Warningf(ctx, "load config file fail: %s:%s", file, err)
 		return err
 	}
@@ -24,7 +24,7 @@ func ReadXml(ctx context.Context, file string, output interface{}, panicOnFail .
 	err = xml.Unmarshal(data, output)
 	if err != nil && doPanic {
 		log.Panicf(ctx, "load config file fail: %s:%s", file, err)
-	} else {
+	} else if err != nil {
 		log.Warningf(ctx, "load config file fail: %s:%s", file, err)
 		return err
 	}
