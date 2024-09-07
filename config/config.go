@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"encoding/xml"
 	"github.com/RealJonathanYip/framework/context0"
 	"github.com/RealJonathanYip/framework/log"
@@ -22,21 +23,33 @@ type Config struct {
 var FrameWorkConfig Config
 
 func init() {
-	ctx := context0.NewContext()
-	dirs := []string{"./", "./conf/", "../conf/", "../../conf/"}
-	for _, dir := range dirs {
-		data, err := os.ReadFile(dir + "framework.xml")
-		if err != nil {
-			continue
-		}
-		err = xml.Unmarshal(data, &FrameWorkConfig)
-		if err != nil {
-			log.Panicf(ctx, "load config file: %s framework.xml %s", dir, err)
-		}
+	if err := ReadXml(context0.NewContext(), "./conf/framework.xml", &FrameWorkConfig, true); err != nil {
+		panic(err)
+	}
+}
 
-		log.Infof(ctx, "load config file %s framework.xml\n %#v", dir, FrameWorkConfig)
-		return
+func ReadXml(ctx context.Context, file string, output interface{}, panicOnFail ...bool) error {
+	doPanic := false
+	if len(panicOnFail) > 0 {
+		doPanic = panicOnFail[0]
 	}
 
-	log.Panic(ctx, "framework config not find")
+	data, err := os.ReadFile(file)
+	if err != nil && doPanic {
+		log.Panicf(ctx, "load config file fail: %s:%s", file, err)
+	} else {
+		log.Warningf(ctx, "load config file fail: %s:%s", file, err)
+		return err
+	}
+
+	err = xml.Unmarshal(data, output)
+	if err != nil && doPanic {
+		log.Panicf(ctx, "load config file fail: %s:%s", file, err)
+	} else {
+		log.Warningf(ctx, "load config file fail: %s:%s", file, err)
+		return err
+	}
+
+	log.Infof(ctx, "load config file %s \n %#v", file, output)
+	return nil
 }
