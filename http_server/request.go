@@ -22,8 +22,8 @@ type Request struct {
 	*http.Request
 }
 
-func (r *Request) ParamsFromQuery(params *struct{}) error {
-	err := binding.BindAndValidate(&params, r.Request, newQueryGetter(r.Request))
+func (r *Request) ParamsFromQuery(params interface{}) error {
+	err := binding.BindAndValidate(params, r.Request, newQueryGetter(r.Request))
 	if err != nil {
 		return err
 	}
@@ -31,8 +31,8 @@ func (r *Request) ParamsFromQuery(params *struct{}) error {
 	return nil
 }
 
-func (r *Request) ParamsFromHeader(params *struct{}) error {
-	err := binding.BindAndValidate(&params, r.Request, newHeaderGetter(r.Request))
+func (r *Request) ParamsFromHeader(params interface{}) error {
+	err := binding.BindAndValidate(params, r.Request, newHeaderGetter(r.Request))
 	if err != nil {
 		return err
 	}
@@ -40,8 +40,8 @@ func (r *Request) ParamsFromHeader(params *struct{}) error {
 	return nil
 }
 
-func (r *Request) ParamsFromForm(params *struct{}) error {
-	err := binding.BindAndValidate(&params, r.Request, newFormGetter(r.Request))
+func (r *Request) ParamsFromForm(params interface{}) error {
+	err := binding.BindAndValidate(params, r.Request, newFormGetter(r.Request))
 	if err != nil {
 		return err
 	}
