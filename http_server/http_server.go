@@ -30,9 +30,11 @@ const (
 	_METHOD_PUT                 = "PUT"
 )
 
+type HttpResult uint32
+
 // 公用的返回
 type Reply struct {
-	Result uint32      `json:"result"`
+	Result HttpResult  `json:"result"`
 	Msg    string      `json:"msg"`
 	Data   interface{} `json:"data"`
 }
