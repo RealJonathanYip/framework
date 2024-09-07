@@ -14,7 +14,7 @@ import (
 
 type HttpServer struct {
 	httpRouter      map[string]func(context.Context, *Response, *Request)
-	onBeforeRequest []func(context.Context, *Response, *Request)
+	onBeforeRequest []func(context.Context, *Response, *Request) bool
 	onBeforeReply   []func(context.Context, *Response, *Request)
 	listener        net.Listener
 	port            int
@@ -40,7 +40,7 @@ type Reply struct {
 func New(name string) *HttpServer {
 	return &HttpServer{
 		httpRouter:      make(map[string]func(context.Context, *Response, *Request)),
-		onBeforeRequest: make([]func(context.Context, *Response, *Request), 0),
+		onBeforeRequest: make([]func(context.Context, *Response, *Request) bool, 0),
 		onBeforeReply:   make([]func(context.Context, *Response, *Request), 0),
 		name:            "web." + name,
 	}
@@ -95,7 +95,9 @@ func (h *HttpServer) doRegisterHttpHandler(path, method string, handler, overFlo
 		}
 
 		for _, fnHandler := range h.onBeforeRequest {
-			fnHandler(ctx, resp, req)
+			if exit := fnHandler(ctx, resp, req); exit {
+				return
+			}
 		}
 
 		handler(ctx, resp, req)
@@ -168,7 +170,7 @@ func (h *HttpServer) Run() error {
 	return errors.Errorf("http server:%s fail too much", h.name)
 }
 
-func (h *HttpServer) OnBeforeRequest(handler func(context.Context, *Response, *Request)) {
+func (h *HttpServer) OnBeforeRequest(handler func(context.Context, *Response, *Request) bool) {
 	h.onBeforeRequest = append(h.onBeforeRequest, handler)
 }
 
