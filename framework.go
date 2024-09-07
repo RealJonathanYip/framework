@@ -17,9 +17,13 @@ type localConfig struct {
 	XMLName   xml.Name  `xml:"server"`
 	LogLevel  string    `xml:"log_level"`
 	LogOutput logOutput `xml:"log_output"`
+	Env       string    `xml:"env"`
 }
 
-var frameWorkConfig localConfig
+var (
+	frameWorkConfig localConfig
+	env             string = "prod"
+)
 
 func Init(configFile string) {
 	if err := config.ReadXml(context0.NewContext(), configFile, &frameWorkConfig, true); err != nil {
@@ -29,4 +33,12 @@ func Init(configFile string) {
 	log.InitLog(log.SetTarget(frameWorkConfig.LogOutput.Value),
 		log.LogFilePath(frameWorkConfig.LogOutput.Path), log.LogFileRotate(frameWorkConfig.LogOutput.FileRotate))
 	log.SetLogLevel(frameWorkConfig.LogLevel)
+
+	if frameWorkConfig.Env != "" {
+		env = frameWorkConfig.Env
+	}
+}
+
+func Env() string {
+	return env
 }
