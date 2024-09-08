@@ -22,7 +22,6 @@ type localConfig struct {
 
 var (
 	frameWorkConfig localConfig
-	env             string = "prod"
 )
 
 func Init(configFile string) {
@@ -34,11 +33,8 @@ func Init(configFile string) {
 		log.LogFilePath(frameWorkConfig.LogOutput.Path), log.LogFileRotate(frameWorkConfig.LogOutput.FileRotate))
 	log.SetLogLevel(frameWorkConfig.LogLevel)
 
-	if frameWorkConfig.Env != "" {
-		env = frameWorkConfig.Env
-	}
 }
 
 func Env() string {
-	return env
+	return frameWorkConfig.Env
 }
