@@ -24,7 +24,7 @@ func (r *Response) ReplyJson(ctx context.Context, data interface{}) error {
 		byteData = byteDataTemp
 	}
 
-	r.Header().Set("content-type", "application/json;utf-8")
+	r.Header().Set("content-type", "application/json; charset=utf-8")
 	r.onBeforeReply(ctx, r)
 
 	if _, err := r.Write(byteData); err != nil {
